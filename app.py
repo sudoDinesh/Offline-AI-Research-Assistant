@@ -2,18 +2,21 @@ import streamlit as st
 from streamlit_chat import message
 from langchain.chains import ConversationalRetrievalChain
 from langchain.document_loaders import PyPDFLoader, DirectoryLoader
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.embeddings import HuggingFaceEmbeddings,OpenAIEmbeddings
 from langchain.llms import CTransformers
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from langchain.memory import ConversationBufferMemory
-
+import os
+from dotenv import load_dotenv
 # Function to load documents
 
 
 def load_documents():
+    print('Started to load documents')
     loader = DirectoryLoader('data/', glob="*.pdf", loader_cls=PyPDFLoader)
     documents = loader.load()
+    print('Documents loaded')
     return documents
 
 
@@ -22,17 +25,36 @@ def split_text_into_chunks(documents):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=500, chunk_overlap=50)
     text_chunks = text_splitter.split_documents(documents)
+    print ('Chunks created')
     return text_chunks
 
 # Function to create embeddings
 
 
 def create_embeddings():
+    print('Embeddings started')
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': "cpu"})
+    print('Embeddings done')
     return embeddings
 # Function to create vector store
 
+def make_vectorstore(text_chunks):
+    load_dotenv()
+    # embeddings = OpenAIEmbeddings()
+    # test = np.load('savefile.npy',allow_pickle=True)
+    # if (test):
+    #     return test
+    # embeddings = HuggingFaceInstructEmbeddings(model_name='hkunlp/instructor-xl')
+    embeddings = OpenAIEmbeddings(deployment=os.getenv("OPENAI_DEPLOYMENT_NAME"),chunk_size=1,)
+    print('Embedding started')
+    vectorstore = FAISS.from_texts(texts=text_chunks, embedding = embeddings)
+    # vectorstore=FAISS.load_local('vectorstore',embeddings)
+    print('Vector store received')
+    vectorstore.save_local('Vectorstore')
+    # vs = np.array(vectorstore)
+    # np.save('savefile.npy',vs)
+    return vectorstore
 
 def create_vector_store(text_chunks, embeddings):
     vector_store = FAISS.from_documents(text_chunks, embeddings)
