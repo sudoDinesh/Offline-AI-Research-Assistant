@@ -2,17 +2,17 @@ import streamlit as st
 from streamlit_chat import message
 from langchain.chains import ConversationalRetrievalChain
 from langchain.document_loaders import PyPDFLoader, DirectoryLoader
-from langchain.embeddings import HuggingFaceEmbeddings,OpenAIEmbeddings
+from langchain.embeddings import HuggingFaceEmbeddings, OpenAIEmbeddings
 from langchain.llms import CTransformers
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from langchain.memory import ConversationBufferMemory
 import os
 from dotenv import load_dotenv
-# Function to load documents
 
 
 def load_documents():
+    # Function to load documents
     print('Started to load documents')
     loader = DirectoryLoader('data/', glob="*.pdf", loader_cls=PyPDFLoader)
     documents = loader.load()
@@ -25,7 +25,7 @@ def split_text_into_chunks(documents):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=500, chunk_overlap=50)
     text_chunks = text_splitter.split_documents(documents)
-    print ('Chunks created')
+    print('Chunks created')
     return text_chunks
 
 # Function to create embeddings
@@ -39,6 +39,7 @@ def create_embeddings():
     return embeddings
 # Function to create vector store
 
+
 def make_vectorstore(text_chunks):
     load_dotenv()
     # embeddings = OpenAIEmbeddings()
@@ -46,15 +47,17 @@ def make_vectorstore(text_chunks):
     # if (test):
     #     return test
     # embeddings = HuggingFaceInstructEmbeddings(model_name='hkunlp/instructor-xl')
-    embeddings = OpenAIEmbeddings(deployment=os.getenv("OPENAI_DEPLOYMENT_NAME"),chunk_size=1,)
+    embeddings = OpenAIEmbeddings(deployment=os.getenv(
+        "OPENAI_DEPLOYMENT_NAME"), chunk_size=1,)
     print('Embedding started')
-    vectorstore = FAISS.from_texts(texts=text_chunks, embedding = embeddings)
+    vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
     # vectorstore=FAISS.load_local('vectorstore',embeddings)
     print('Vector store received')
-    vectorstore.save_local('Vectorstore')
+    vectorstore.save_local('/Users/dinesh/college/proj/Vectorstore')
     # vs = np.array(vectorstore)
     # np.save('savefile.npy',vs)
     return vectorstore
+
 
 def create_vector_store(text_chunks, embeddings):
     vector_store = FAISS.from_documents(text_chunks, embeddings)
@@ -84,7 +87,8 @@ documents = load_documents()
 text_chunks = split_text_into_chunks(documents)
 
 # Create embeddings
-embeddings = create_embeddings()
+embeddings = create_embeddings()  # huggingFace
+# embeddings = make_vectorstore(text_chunks)  # openAI
 
 
 # Create vector store
